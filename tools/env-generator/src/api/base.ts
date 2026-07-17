@@ -75,6 +75,7 @@ export class WebUIEnvTemplateCompiler {
       'PARAMS_ENCODING_ENABLED': 'false',
       'RULE_ACTIVITY': 'User Subscriptions',
       'ENABLE_USERPASS_LOGIN': 'true',
+      'X509_ENABLED': 'true',
       'AUTH_TRUST_HOST': 'true',
       'AUTH_SECRET': authSecret,
       'NEXTAUTH_SECRET': authSecret,

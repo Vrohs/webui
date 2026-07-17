@@ -135,6 +135,31 @@ describe('Login Page Test', () => {
         expect(oidcParent).toBeNull();
     });
 
+    it('should not render the x509 button if x509 is disabled', async () => {
+        fetchMock.doMock();
+        fetchMock.mockIf(/login/, req =>
+            Promise.resolve(
+                JSON.stringify({
+                    x509Enabled: false,
+                    userpassEnabled: true,
+                    oidcEnabled: true,
+                    oidcProviders: getSampleOIDCProviders(),
+                    multiVOEnabled: true,
+                    voList: getSampleVOs(),
+                    isLoggedIn: false,
+                    status: 'error',
+                } as LoginViewModel),
+            ),
+        );
+        await act(async () => render(<Login />));
+
+        expect(screen.queryByRole('button', { name: /x509/ })).toBeNull();
+
+        // The other login methods stay untouched
+        expect(screen.getByRole('button', { name: /Userpass/ })).toBeInTheDocument();
+        expect(screen.getByRole('generic', { name: /OIDC Login Buttons/ })).toBeInTheDocument();
+    });
+
     it('should show error message if exists during initial page load', async () => {
         fetchMock.doMock();
         fetchMock.mockIf(/login/, req =>

@@ -352,7 +352,7 @@ export const Login = ({
                         </div>
                     )}
 
-                    <Button onClick={() => submitX509(inputAccount)}>x509</Button>
+                    {loginViewModel.x509Enabled && <Button onClick={() => submitX509(inputAccount)}>x509</Button>}
 
                     {loginViewModel.userpassEnabled && (
                         <Button
