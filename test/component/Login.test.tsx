@@ -160,6 +160,36 @@ describe('Login Page Test', () => {
         expect(screen.getByRole('generic', { name: /OIDC Login Buttons/ })).toBeInTheDocument();
     });
 
+    it('should render a provider icon when iconUrl is set and fall back when it is not', async () => {
+        const [providerWithIcon] = getSampleOIDCProviders();
+        const providerWithoutIcon = { ...providerWithIcon, name: 'plain-provider', iconUrl: undefined };
+        const vo = { ...getSampleVOs()[0], oidcProviders: [providerWithIcon, providerWithoutIcon] };
+
+        fetchMock.doMock();
+        fetchMock.mockIf(/login/, req =>
+            Promise.resolve(
+                JSON.stringify({
+                    x509Enabled: true,
+                    userpassEnabled: true,
+                    oidcEnabled: true,
+                    oidcProviders: [providerWithIcon, providerWithoutIcon],
+                    multiVOEnabled: true,
+                    voList: [vo],
+                    isLoggedIn: false,
+                    status: 'error',
+                } as LoginViewModel),
+            ),
+        );
+        await act(async () => render(<Login />));
+
+        // Only the provider carrying an iconUrl renders an <img>; the other keeps the
+        // default icon. The image is decorative (alt=""), so it is queried by src.
+        const oidcButtons = screen.getByRole('generic', { name: /OIDC Login Buttons/ });
+        const icons = oidcButtons.querySelectorAll('img');
+        expect(icons).toHaveLength(1);
+        expect(icons[0]).toHaveAttribute('src', providerWithIcon.iconUrl);
+    });
+
     it('should show error message if exists during initial page load', async () => {
         fetchMock.doMock();
         fetchMock.mockIf(/login/, req =>

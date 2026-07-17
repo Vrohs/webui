@@ -18,9 +18,13 @@ const cernOIDCProvider: OIDCProvider = {
     redirectUrl: 'https://login.cern.ch/adfs/oauth2/authorize',
 };
 
+// Carries an iconUrl, so the CMS tab below shows a branded button next to CERN's
+// fallback icon. Served from ../public via staticDirs, to keep the published
+// Storybook independent of any remote host.
 const IndigoIAMProvider: OIDCProvider = {
     name: 'Indigo IAM',
     url: 'https://accounts.google.com/o/oauth2/v2/auth',
+    iconUrl: '/experiment-logo.png',
     clientId: '1234567890',
     clientSecret: '1234567890',
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -85,5 +89,39 @@ export const AMultiVOOIDCEnabledLogin: Story = {
         voAtlas.oidcEnabled = true;
         voCMS.oidcEnabled = true;
         voLHCb.oidcEnabled = true;
+    },
+};
+
+/**
+ * A deployment that authenticates purely through OIDC: userpass and x509 are both
+ * off, so the only login options are the configured providers. Indigo IAM renders
+ * its configured iconUrl, CERN falls back to the default icon.
+ */
+export const BOIDCOnlyLogin: Story = {
+    args: {
+        loginViewModel: {
+            status: 'success',
+            userpassEnabled: false,
+            x509Enabled: false,
+            oidcEnabled: true,
+            oidcProviders: [cernOIDCProvider, IndigoIAMProvider],
+            multiVOEnabled: false,
+            voList: [voCMS],
+            isLoggedIn: false,
+            accountActive: undefined,
+            accountsAvailable: undefined,
+            rucioAuthHost: 'https://rucio.cern.ch',
+        },
+        authViewModel: {
+            status: 'success',
+            message: '',
+            rucioAccount: '',
+            rucioMultiAccount: '',
+            rucioAuthType: '',
+            rucioAuthToken: '',
+            rucioIdentity: '',
+            rucioAuthTokenExpires: '',
+            role: undefined,
+        },
     },
 };
