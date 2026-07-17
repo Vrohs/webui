@@ -344,7 +344,15 @@ export const Login = ({
                                         variant="neutral"
                                         onClick={() => handleOIDCSubmit(provider, loginViewModel.voList[selectedVOTab], inputAccount)}
                                     >
-                                        <MdAccountCircle className="mr-2 h-5 w-5" />
+                                        {provider.iconUrl ? (
+                                            // next/image is not usable here: the icon URL is supplied by the
+                                            // operator at deploy time, so its host cannot be allow-listed in
+                                            // next.config's images.remotePatterns.
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={provider.iconUrl} alt="" className="mr-2 h-5 w-5 object-contain" />
+                                        ) : (
+                                            <MdAccountCircle className="mr-2 h-5 w-5" />
+                                        )}
                                         {provider.name}
                                     </Button>
                                 );
