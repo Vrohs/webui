@@ -5,6 +5,25 @@ import { injectable } from 'inversify';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * OIDC provider icons are downloaded into public/oidc-icons/<NAME>.png by the
+ * container entrypoint (see rucio/containers webui/docker-entrypoint.sh), so they
+ * can be served through next/image. We only expose the local path when the file is
+ * actually present; a missing or failed download degrades to the default icon.
+ *
+ * Kept as a free function rather than a class method so that EnvConfigGateway stays
+ * structurally assignable to EnvConfigGatewayOutputPort, which some call sites rely on
+ * (e.g. logic-config-feature.ts types the resolved gateway as the concrete class).
+ */
+function resolveLocalOIDCIconUrl(providerName: string, configuredIconUrl: string | undefined): string | null {
+    if (!configuredIconUrl) {
+        return null;
+    }
+    const fileName = `${providerName.toUpperCase()}.png`;
+    const filePath = path.join(process.cwd(), 'public', 'oidc-icons', fileName);
+    return fs.existsSync(filePath) ? `/oidc-icons/${fileName}` : null;
+}
+
 @injectable()
 class EnvConfigGateway implements EnvConfigGatewayOutputPort {
     async listDIDsInitialPattern(): Promise<string | undefined> {
@@ -75,7 +94,7 @@ class EnvConfigGateway implements EnvConfigGatewayOutputPort {
             const provider: OIDCProvider = {
                 name: providerName,
                 url: (await this.get(`OIDC_PROVIDER_${providerName}_URL`)) as string,
-                iconUrl: await this.resolveIconUrl(providerName),
+                iconUrl: resolveLocalOIDCIconUrl(providerName, await this.get(`OIDC_PROVIDER_${providerName}_ICON_URL`)),
                 clientId: (await this.get(`OIDC_PROVIDER_${providerName}_CLIENT_ID`)) as string,
                 clientSecret: (await this.get(`OIDC_PROVIDER_${providerName}_CLIENT_SECRET`)) as string,
                 authorizationUrl: (await this.get(`OIDC_PROVIDER_${providerName}_AUTHORIZATION_URL`)) as string,
@@ -89,22 +108,6 @@ class EnvConfigGateway implements EnvConfigGatewayOutputPort {
             providers.push(provider);
         }
         return Promise.resolve(providers);
-    }
-
-    /**
-     * OIDC provider icons are downloaded into public/oidc-icons/<NAME>.png by the
-     * container entrypoint (see rucio/containers webui/docker-entrypoint.sh), so they
-     * can be served through next/image. We only expose the local path when the file is
-     * actually present; a missing or failed download degrades to the default icon.
-     */
-    private async resolveIconUrl(providerName: string): Promise<string | null> {
-        const configured = await this.get(`OIDC_PROVIDER_${providerName}_ICON_URL`);
-        if (!configured) {
-            return null;
-        }
-        const fileName = `${providerName.toUpperCase()}.png`;
-        const filePath = path.join(process.cwd(), 'public', 'oidc-icons', fileName);
-        return fs.existsSync(filePath) ? `/oidc-icons/${fileName}` : null;
     }
 
     async multiVOEnabled(): Promise<boolean> {
