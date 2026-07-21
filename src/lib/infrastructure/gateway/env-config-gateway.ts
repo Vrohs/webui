@@ -2,6 +2,8 @@ import { ConfigNotFound, InvalidConfig } from '@/lib/core/exceptions/env-config-
 import { OIDCProvider, VO } from '@/lib/core/entity/auth-models';
 import EnvConfigGatewayOutputPort from '@/lib/core/port/secondary/env-config-gateway-output-port';
 import { injectable } from 'inversify';
+import fs from 'fs';
+import path from 'path';
 
 @injectable()
 class EnvConfigGateway implements EnvConfigGatewayOutputPort {
@@ -73,7 +75,7 @@ class EnvConfigGateway implements EnvConfigGatewayOutputPort {
             const provider: OIDCProvider = {
                 name: providerName,
                 url: (await this.get(`OIDC_PROVIDER_${providerName}_URL`)) as string,
-                iconUrl: (await this.get(`OIDC_PROVIDER_${providerName}_ICON_URL`)) as string,
+                iconUrl: await this.resolveIconUrl(providerName),
                 clientId: (await this.get(`OIDC_PROVIDER_${providerName}_CLIENT_ID`)) as string,
                 clientSecret: (await this.get(`OIDC_PROVIDER_${providerName}_CLIENT_SECRET`)) as string,
                 authorizationUrl: (await this.get(`OIDC_PROVIDER_${providerName}_AUTHORIZATION_URL`)) as string,
@@ -87,6 +89,22 @@ class EnvConfigGateway implements EnvConfigGatewayOutputPort {
             providers.push(provider);
         }
         return Promise.resolve(providers);
+    }
+
+    /**
+     * OIDC provider icons are downloaded into public/oidc-icons/<NAME>.png by the
+     * container entrypoint (see rucio/containers webui/docker-entrypoint.sh), so they
+     * can be served through next/image. We only expose the local path when the file is
+     * actually present; a missing or failed download degrades to the default icon.
+     */
+    private async resolveIconUrl(providerName: string): Promise<string | null> {
+        const configured = await this.get(`OIDC_PROVIDER_${providerName}_ICON_URL`);
+        if (!configured) {
+            return null;
+        }
+        const fileName = `${providerName.toUpperCase()}.png`;
+        const filePath = path.join(process.cwd(), 'public', 'oidc-icons', fileName);
+        return fs.existsSync(filePath) ? `/oidc-icons/${fileName}` : null;
     }
 
     async multiVOEnabled(): Promise<boolean> {

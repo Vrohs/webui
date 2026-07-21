@@ -3,6 +3,8 @@ import EnvConfigGatewayOutputPort from '@/lib/core/port/secondary/env-config-gat
 import appContainer from '@/lib/infrastructure/ioc/container-config';
 import GATEWAYS from '@/lib/infrastructure/ioc/ioc-symbols-gateway';
 import { createOIDCProviders, deleteOIDCProviders } from 'test/fixtures/oidc-provider-config';
+import fs from 'fs';
+import path from 'path';
 
 describe('env-config-gateway', () => {
     it('should return the value of the environment variable', async () => {
@@ -92,7 +94,9 @@ describe('env-config-gateway oidc config test', () => {
 
         expect(cern.name).toEqual('cern');
         expect(cern.url).toEqual('https://cern.ch');
-        expect(cern.iconUrl).toEqual('https://cern.ch/icon.png');
+        // ICON_URL is set in the fixture, but no local file exists in the test env,
+        // so the gateway degrades to null rather than pointing at a missing image.
+        expect(cern.iconUrl).toBeNull();
         expect(cern.clientId).toEqual('client-id');
         expect(cern.clientSecret).toEqual('client-secret');
         expect(cern.scopes).toEqual(['scope1', 'scope2']);
@@ -102,6 +106,32 @@ describe('env-config-gateway oidc config test', () => {
         expect(cern.redirectUrl).toEqual('https://cern.ch/redirect');
         expect(cern.refreshTokenUrl).toEqual('https://cern.ch/userinfo');
     });
+
+    it('should expose the local icon path when the downloaded file exists', async () => {
+        const existsSpy = jest
+            .spyOn(fs, 'existsSync')
+            .mockImplementation(p => String(p) === path.join(process.cwd(), 'public', 'oidc-icons', 'CERN.png'));
+        const gateway = appContainer.get<EnvConfigGatewayOutputPort>(GATEWAYS.ENV_CONFIG);
+
+        const result = await gateway.oidcProviders();
+
+        expect(result[0].iconUrl).toEqual('/oidc-icons/CERN.png');
+        // test-provider's file does not exist, so it falls back to null.
+        expect(result[1].iconUrl).toBeNull();
+        existsSpy.mockRestore();
+    });
+
+    it('should return null iconUrl when ICON_URL is not configured', async () => {
+        delete process.env['OIDC_PROVIDER_CERN_ICON_URL'];
+        jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+        const gateway = appContainer.get<EnvConfigGatewayOutputPort>(GATEWAYS.ENV_CONFIG);
+
+        const result = await gateway.oidcProviders();
+
+        expect(result[0].iconUrl).toBeNull();
+        jest.restoreAllMocks();
+    });
+
     it('should throw InvalidConfig if oidc is enabled but no providers are provided', async () => {
         delete process.env['OIDC_PROVIDERS'];
         const gateway = appContainer.get<EnvConfigGatewayOutputPort>(GATEWAYS.ENV_CONFIG);
