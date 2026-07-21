@@ -86,6 +86,7 @@ For each `OIDC Provider` specified in the `OIDC_PROVIDERS` variable, the additio
 | OIDC_PROVIDER_CERN_REFRESH_TOKEN_URL | RUCIO_WEBUI_OIDC_PROVIDER_CERN_REFRESH_TOKEN_URL | The refresh token endpoint                                            |         |         |
 | OIDC_PROVIDER_CERN_USERINFO_URL      | RUCIO_WEBUI_OIDC_PROVIDER_CERN_USERINFO_URL      | The URL to obtain user info from the OIDC Provider                    |         |         |
 | OIDC_PROVIDER_CERN_REDIRECT_URL      | RUCIO_WEBUI_OIDC_PROVIDER_CERN_REDIRECT_URL      | The redirection URL configured on the OIDC Provider                   |         |         |
+| OIDC_PROVIDER_CERN_ICON_URL          | RUCIO_WEBUI_OIDC_PROVIDER_CERN_ICON_URL          | Optional. URL to a raster icon (png/jpg) shown on the provider's login button. Downloaded locally by the container and served via next/image; a default icon is used if unset. |         |         |
 
 3. Run the `generate_env.js` script to generate the `.env` file for the WEBUI. You can switch between `dev` and `prod` modes.
 
