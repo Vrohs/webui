@@ -18,9 +18,10 @@ const cernOIDCProvider: OIDCProvider = {
     redirectUrl: 'https://login.cern.ch/adfs/oauth2/authorize',
 };
 
-// Carries an iconUrl, so the CMS tab below shows a branded button next to CERN's
-// fallback icon. Served from ../public via staticDirs, to keep the published
-// Storybook independent of any remote host.
+// Carries an iconUrl pointing at a local public/ asset, mirroring how the container
+// serves downloaded provider icons through next/image. The CMS tab below shows this
+// branded button next to CERN's fallback icon; served via staticDirs so the published
+// Storybook stays independent of any remote host.
 const IndigoIAMProvider: OIDCProvider = {
     name: 'Indigo IAM',
     url: 'https://accounts.google.com/o/oauth2/v2/auth',

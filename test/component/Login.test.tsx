@@ -161,7 +161,7 @@ describe('Login Page Test', () => {
     });
 
     it('should render a provider icon when iconUrl is set and fall back when it is not', async () => {
-        const [providerWithIcon] = getSampleOIDCProviders();
+        const providerWithIcon = { ...getSampleOIDCProviders()[0], iconUrl: '/oidc-icons/CERN.png' };
         const providerWithoutIcon = { ...providerWithIcon, name: 'plain-provider', iconUrl: undefined };
         const vo = { ...getSampleVOs()[0], oidcProviders: [providerWithIcon, providerWithoutIcon] };
 
@@ -182,12 +182,13 @@ describe('Login Page Test', () => {
         );
         await act(async () => render(<Login />));
 
-        // Only the provider carrying an iconUrl renders an <img>; the other keeps the
-        // default icon. The image is decorative (alt=""), so it is queried by src.
+        // Only the provider carrying an iconUrl renders an image; the other keeps the
+        // default icon. next/image rewrites src to its optimizer URL (/_next/image?url=...),
+        // so we assert the decoded src contains the local path rather than matching exactly.
         const oidcButtons = screen.getByRole('generic', { name: /OIDC Login Buttons/ });
         const icons = oidcButtons.querySelectorAll('img');
         expect(icons).toHaveLength(1);
-        expect(icons[0]).toHaveAttribute('src', providerWithIcon.iconUrl);
+        expect(decodeURIComponent(icons[0].getAttribute('src') ?? '')).toContain('/oidc-icons/CERN.png');
     });
 
     it('should show error message if exists during initial page load', async () => {

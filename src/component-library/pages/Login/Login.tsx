@@ -13,6 +13,7 @@ import { AuthViewModel } from '@/lib/infrastructure/data/auth/auth';
 import { MdAccountCircle } from 'react-icons/md';
 import { HiArrowRight, HiArrowLeft } from 'react-icons/hi';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import Modal from 'react-modal';
 import { cn } from '@/component-library/utils';
@@ -345,11 +346,9 @@ export const Login = ({
                                         onClick={() => handleOIDCSubmit(provider, loginViewModel.voList[selectedVOTab], inputAccount)}
                                     >
                                         {provider.iconUrl ? (
-                                            // next/image is not usable here: the icon URL is supplied by the
-                                            // operator at deploy time, so its host cannot be allow-listed in
-                                            // next.config's images.remotePatterns.
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={provider.iconUrl} alt="" className="mr-2 h-5 w-5 object-contain" />
+                                            // Icons are downloaded locally by the container entrypoint and served
+                                            // from public/oidc-icons via next/image (see the login-config spec).
+                                            <Image src={provider.iconUrl} alt="" width={20} height={20} className="mr-2 h-5 w-5 object-contain" />
                                         ) : (
                                             <MdAccountCircle className="mr-2 h-5 w-5" />
                                         )}
