@@ -41,8 +41,12 @@ export const getProtocolColumnDefs = (): (ColDef<RSEDetailsProtocol> | ColGroupD
             {
                 headerName: 'Prefix',
                 field: 'prefix',
-                width: 200,
-                flex: 0,
+                minWidth: 300,
+                flex: 1,
+                // Deployed prefixes are deep storage paths: wrap rather than widen the table, so the
+                // full value stays visible without forcing horizontal scrolling on narrow viewports.
+                wrapText: true,
+                autoHeight: true,
                 filter: true,
                 filterParams: DefaultTextFilterParams,
             },
